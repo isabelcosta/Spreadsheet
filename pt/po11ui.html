@@ -1,0 +1,230 @@
+<HTML><TITLE>User Interaction (po11)</TITLE>
+<BODY>
+  <H1>User Interaction</H1>
+  <H2>Programa&ccedil;&atilde;o por Objectos 2011/12, Taguspark</H2>
+  <H3>Pedro Reis dos Santos</H3>
+
+  Este documento pretende descrever brevemente o funcionamento da interface
+  utilizador utilizada para desenvolver aplica&ccedil;&otilde;es na disciplina de
+  <b>Programa&ccedil;&atilde;o por Objectos</b>.
+
+  As classes que constituem a interface utilizador s&atilde;o distribu&iacute;das em
+  c&oacute;digo fonte Java no pacote <b>pt.utl.ist.po.ui</b>
+  A interac&ccedil;&atilde;o &eacute; realizada apenas com menus, forms e displays.
+  O menu &eacute; uma lista de op&ccedil;&otilde;es que o utilizador pode escolher.
+  A form permite ao utilizador introduzir dados simples: n&uacute;meros inteiros ou
+  reais, cadeias de caracteres ou valores booleanos (sim ou n&atilde;o).
+  O display &eacute; utilizada para informar o utilizador dos resultados da
+  interac&ccedil;&atilde;o e &eacute; apenas constitu&iacute;da por cadeias de caracteres.
+
+  A interface utilizador disponibilizada procura facilitar o teste autom&aacute;tico
+  da funcionalidade dos projectos desenvolvidos, suportar diferentes interfaces
+  e garantir a independ&ecirc;ncia entre o n&uacute;cleo do projecto e a sua interface
+  gr&aacute;fica.
+  O n&uacute;cleo &eacute; um conjunto de classes que modela e realiza o problema proposto.
+  A interface d&aacute; um aspecto vis&iacute;vel poss&iacute;vel atrav&eacute;s do qual se podem realizar
+  pedidos ao n&uacute;cleo.
+  Desta forma, o n&uacute;cleo nunca deve aceder &agrave; interface utilizador.
+  Da mesma forma, a interface utilizador n&atilde;o deve realizar opera&ccedil;&otilde;es de c&aacute;lculo
+  ou gest&atilde;o mas apenas recolher dados, pass&aacute;-los a um ou mais m&eacute;todos do
+  n&uacute;cleo, e apresentar os resultados obtidos do n&uacute;cleo.
+  Os exemplos das aulas pr&aacute;tica <b>bank</b> e <b>editor</b> fornecem exemplos
+  simples para a realiza&ccedil;&atilde;o de projectos mais complexos que devem ser
+  analisados para compreender os conceitos expostos neste documento.
+
+  <h2>A interliga&ccedil;&atilde;o entre o n&uacute;cleo e a interface utilizador</h2>
+  Se o n&uacute;cleo n&atilde;o depende da interface utilizador utilizada, deve ser esse
+  n&uacute;cleo da aplica&ccedil;&atilde;o a ser criado primeiro.
+  Esse n&uacute;cleo, aqui designado por <b>App</b>, deve ser depois passado &agrave;
+  interface, para que esta possa fazer os pedidos e recolher os resultados.
+  O menu inicial, aqui designado por <b>AppMenu</b>, &eacute; uma classe que extende
+  a classe disponibilizada <b>pt.utl.ist.po.ui.Menu</b>.
+  A coloca&ccedil;&atilde;o de um t&iacute;tulo &eacute; facultiva e serve para identificar a janela
+  de interac&ccedil;&atilde;o em algumas interfaces gr&aacute;ficas.
+  Para activar o menu, tornando-o vis&iacute;vel e permitindo ao utilizador a
+  selec&ccedil;&atilde;o de uma op&ccedil;&atilde;o, basta invocar o m&eacute;todo <b>open()</b>.
+  A interac&ccedil;&atilde;o termina com a invoca&ccedil;&atilde;o do m&eacute;todo <b>IO.close()</b>, o que
+  permite libertar recursos como, por exemplo, janelas em ambientes gr&aacute;ficos.
+  <pre>
+  App app = new App();
+  Menu m = new AppMenu(app);
+  IO.setTitle(title);
+  m.open();
+  IO.close();
+  </pre>
+
+  <h2>Constru&ccedil;&atilde;o de um Menu</h2>
+  Os menus s&atilde;o classes derivadas da classe disponibilizada
+  <b>pt.utl.ist.po.ui.Menu</b>.
+  O construtor da classe recebe o t&iacute;tulo do menu (<b>String</b>) e um vector
+  de opc&otilde;es (<b>Command[]</b>).
+  Cada uma das op&ccedil;&otilde;es do menu &eacute; uma classe derivada da class disponibilizada
+  <b>pt.utl.ist.po.ui.Command</b>.
+  Estas op&ccedil;&otilde;es podem ser realizadas por classes com nome, como as classes
+  <b>Op&ccedil;ao2</b> ou <b>SubMenu</b> do exemplo abaixo, ou como uma classe an&oacute;nima.
+  Em qualquer dos casos, a classe base <b>Command</b> dever&aacute; realizar o
+  m&eacute;todo <b>execute()</b>, a ser invocado quando o utilizador selecciona
+  essa op&ccedil;&atilde;o no menu.
+  Para que nesse m&eacute;todo se possa aceder ao n&uacute;cleo da aplica&ccedil;&atilde;o, a classe
+  <b>Command</b> necessita ser parametrizada com a classe principal da
+  aplica&ccedil;&atilde;o, ou eventualmente uma outra classe.
+  Uma inst&acirc;ncia deste tipo parametrizado dever&aacute; ser passada no construtor 
+  da classe <b>Command</b> e acedida dentro do m&eacute;todo <b>execute()</b>
+  atrav&eacute;s do m&eacute;todo <b>entity()</b>.
+  A opera&ccedil;&atilde;o <b>entry(2).invisible()</b> torna a segunda op&ccedil;&atilde;o do
+  menu n&atilde;o seleccion&aacute;vel, at&eacute; que o m&eacute;todo <b>visible()</b> seja invocado.
+  <pre>
+  public class AppMenu extends Menu {
+      public AppMenu(App app) {
+	  super(MenuEntries.TITLE, new Command<?>[] {
+	      new Command<App> (false, "option title", app) {
+		  public final void execute() {
+		      App nucleo = entity();
+		      Display d = new Display(title());
+		      d.add("MyMenu.execute() called");
+		      d.display();
+		  }
+	      },
+	      new Opcao2(b),
+	      new SubMenu(b)
+	  });
+	  entry(2).invisible();
+      }
+  }
+  </pre>
+
+  Se uma classe derivada de <b>Command</b> n&atilde;o for an&oacute;nima ser&aacute; codificada
+  separadamente.
+  A estrutura &eacute; id&ecirc;ntica ao exemplo an&oacute;nimo acima, mas o construtor aparece
+  explicitamente.
+  Qualquer uma das op&ccedil;&otilde;es de um menu pode ser um outro menu, cuja opera&ccedil;&atilde;o
+  de <b>execute()</b> dever&aacute; invocar o m&eacute;todo <b>open()</b> do outro menu
+  para o activar.
+  Quando esse outro menu terminar, o controlo regressa ao menu actual.
+  <pre>
+  public class SubMenu extends Command<App> {
+	  public AppMenu(App app) {
+		  super(false, "SubMenu title, app);
+	  }
+	  public final void execute() throws InvalidOperation {
+		  Menu m = new OtherMenu(entity());
+		  m.open();
+	  }
+  }
+  </pre>
+
+  <h2>Apresenta&ccedil;&atilde;o de mensagens ao utilizador</h2>
+
+  A apresenta&ccedil;&atilde;o de mensagens para o utilizador realiza-se atrav&eacute;s da classe <B>Display</B>,
+  onde o m&eacute;todo <b>display(boolean force)</b> apresenta o texto recolhido pelos m&eacute;todos
+  <b>add(String)</b> e <b>addNewLine(String)</b>.
+  A utiliza&ccedil;&atilde;o da op&ccedil;&atilde;o <b>force</b> executa a opera&ccedil;&atilde;o mesmo que
+  n&atilde;o tenha sido adicionado texto, enquanto o m&eacute;todo <b>addNewLine(String)</b> cria uma nova
+  linha antes de adicionar o texto passado como argumento.
+
+  <h2>Pedido de valores ao utilizador</h2>
+  Para obter dados do utilizador, para definir pesquisas ou criar objectos,
+  por exemplo, &eacute; necess&aacute;rio utilizar forms.
+  Uma <b>Form</b> &eacute; uma classe que agrupa diversos pedidos numa s&oacute; interac&ccedil;&atilde;o.
+  Os pedidos resumem-se a valores de quatro tipos da linguagem Java:
+  <b>int</b>, <b>real</b>, <b>boolean</b> e <b>String</b>.
+  Para cada valor a pedir ao utilizador dever&aacute; ser criada uma inst&acirc;ncia das
+  classes <b>InputInteger</b>, <b>InputFloat</b>, <b>InputString</b> e
+  <b>InputString</b>, respectivamente.
+  Cada um dos construtores dessas classes recebe a <b>Form</b> onde deve ser
+  integrado o pedido e uma mensagem descritiva do pedido.
+  Existe ainda um separador, designado por <b>InputNone</b> que n&atilde;o pede
+  qualquer valor.
+  O m&eacute;todo <b>parse()</b> da <b>Form</b> efectua o pedido ao utilizador,
+  podendo os valores ser recolhidos posteriomente atrav&eacute;s do m&eacute;todo
+  <b>value()</b> de cada uma das inst&acirc;ncias de <b>Input</b> introduzidas na
+  <b>Form</b>.
+  <pre>
+  public final void execute() throws InvalidOperation {
+	  Form f = new Form("Titulo");
+	  InputInteger id = new InputInteger(f, "Introduza um valor inteiro");
+	  InputFloat real = new InputFloat(f, "Dist&acirc;ncia");
+	  InputNone   sep = new InputNone(f, "-----");
+	  InputString str = new InputString(f, "Nome");
+	  InputBoolean sn = new InputBoolean(f, "OK?");
+	  f.parse();
+	  IO.message("Id = " + id.value() + " Real = " + real.value() +
+		     " Str = " + str.value() + " OK = " + sn.value());
+  }
+  </pre>
+
+  <h2>Interfaces dispon&iacute;veis</h2>
+  O modo normal de funcionamento da interface utilizador &eacute; o modo texto.
+  Este modo &eacute; o utilizado para efectuar os testes autom&aacute;ticos, e manuais,
+  pelo que ao desenvolver o projecto deve garantir o bom da aplica&ccedil;&atilde;o neste
+  modo.
+  A execu&ccedil;&atilde;o da aplica&ccedil;&atilde;o neste modo deve ser efectuada numa janela de
+  texto e n&atilde;o necessita de quaisquer par&acirc;metros espec&iacute;ficos.
+  <pre>
+  java aplic.Main
+  </pre>
+  Notar que se a vari&aacute;vel de ambiente <b>CLASSPATH</b> n&atilde;o estiver
+  correctamente definida &eacute; necess&aacute;rio indicar o seu valor em cada
+  invoca&ccedil;&atilde;o.
+  <pre>
+  java -cp . aplic.Main
+  </pre>
+
+  Para efectuar testes de uma forma automatizada, incluindo os testes
+  disponibilizados ao longo do semestre, deve ser definidas duas vari&aacute;veis
+  de ambiente.
+  Estas vari&aacute;veis, designadas por <b>in</b> e <b>out</b>, permitem que a
+  interface utilizador redireccione, quando em modo texto, a entrada de
+  valores a partir de um ficheiro (<b>in.txt</b>) bem como a recolha dos
+  resultados (<b>out.txt</b>), respectivamente.
+  <pre>
+  java -Din=in.txt -Dout=out.txt aplic.Main
+  </pre>
+
+  A constru&ccedil;&atilde;o de um ficheiro <b>jar</b> (<i>Java ARchive</i>) permite
+  agrupar v&aacute;rios ficheiros compilados (<b>.class</b>) num s&oacute; ficheiro.
+  Para que este ficheiro possa ser executado como uma aplica&ccedil;&atilde;o &eacute; 
+  necess&aacute;rio declarar um manifesto (<b>MANIFEST.MF</b>) onde se indica,
+  por exemplo, a classe de arranque (<b>Main-Class</b>) ou outros ficheiros
+  <b>.jar</b> a utilizar (<b>Class-Path</b>)
+  <pre>
+  Main-Class: aplic.Main
+  Class-Path: pt.jar
+  </pre>
+  O ficheiro <b>.jar</b> &eacute; criado com o comando
+  <pre>
+  jar -cfm aplic.jar MANIFEST.MF *.class
+  </pre>
+  Onde <b>*.class</b> representa todos os ficheiros da aplica&ccedil;&atilde;o.
+  A aplica&ccedil;&atilde;o pode agora ser invocada com
+  <pre>
+  java -jar aplic.jar
+  </pre>
+  N&atilde;o confundir este ficheiro com um outro <b>.jar</b> que cont&eacute;m apenas
+  os ficheiros fonte (<b>.java</b>) a submeter para avalia&ccedil;&atilde;o.
+
+  A utiliza&ccedil;&atilde;o da interface gr&aacute;fica <i>swing</i> &eacute; efectuada atrav&eacute;s da
+  atribui&ccedil;&atilde;o &agrave; vari&aacute;vel de ambiente <b>ui</b>:
+  <pre>
+  java -Dui=swing aplic.Main
+  </pre>
+  Este &eacute; o comportamento por omiss&atilde;o no sistema <i>windows</i> quando
+  directamente invocado a partir do <i>explorer</i>, se o ficheiro <b>jar</b>
+  estiver correctamente constru&iacute;do e associa&ccedil;&atilde;o com o interpretador Java
+  definida.
+
+  Embora experimental, tamb&eacute;m &eacute; poss&iacute;vel executar a aplica&ccedil;&atilde;o a partir de 
+  um <i>browser</i> utilizando um <i>applet</i>.
+  Para tal basta incluir a sua invoca&ccedil;&atilde;o num ficheiro de hipertexto
+  (<b>.html</b>).
+  Neste caso a execu&ccedil;&atilde;o j&aacute; n&atilde;o se inicia pela rotina <b>main()</b> pelo que
+  a classe de arranque &eacute; sempre <b>pt.utl.ist.po.ui.AppletInteraction</b>.
+  Como par&acirc;metro &eacute; necess&aacute;rio definir a localiza&ccedil;&atilde;o da rotina <b>main()</b> 
+  como valor do par&acirc;metro <b>mainClass</b>.
+  <pre>
+&lt;applet width=300 height=300 code="pt.utl.ist.po.ui.AppletInteraction" archive = 'aplic.jar'&gt;
+&lt;param name="mainClass" value="aplic.Main" &gt;
+&lt;/applet&gt;
+  </pre>
+
+
